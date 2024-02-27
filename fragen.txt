@@ -1,0 +1,20 @@
+In wie weit soll ein Frontend auch von mir entwickelt werden? 
+Es steht ja dort, dass ich frei in der Gestaltung eines Frontends bin, aber oben steht, 
+dass meine API so gebaut werden soll, dass darauf ein Frontend gebaut werden könnte.
+Wenn kein "richtiges" Frontend gefragt ist, dann würde ich einfach nen HTML/CSS basiertes
+Template-Frontend vom Server aus machen und kein JS-Framework benutzen.
+
+Sichere API in wie fern? Ist die Idee hier Username, Password?
+Meine Idee wäre das ganze ein wenig zu vereinfachen und diese Problematik und
+das "Sharing" der Todos mit einer Klappe zu schlagen, indem ich den Share Link
+als Authenntifizierunsmethode verwende. Ähnlich des Prinzips von Etherpad & Co.
+Quasi wer den Link hat ist Besitzer. Ich kann aber auch nen klassischen
+Username/Password-Login basteln.
+
+Sollen die User mit denen ich meine Todos share diese auch bearbeiten können?
+Wenn ja, dann würde das mit meiner Lösung ja sowieso funktionieren.
+Wenn nein, dann müsste ich das noch ändern.
+
+
+Todos
+- Rename sessionString/user into something more meaningful like todoListId
