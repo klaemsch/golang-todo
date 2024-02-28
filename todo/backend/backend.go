@@ -99,7 +99,7 @@ func PostTodo(w http.ResponseWriter, r *http.Request, listId string) {
 	}
 
 	// decode json from request body
-	todo, err := stores.NewTodoFromJson(r, listId)
+	todo, err := stores.NewTodoFromJson(r)
 
 	if err != nil {
 		log.Printf("Error while decoding body: %v", err)
@@ -108,7 +108,7 @@ func PostTodo(w http.ResponseWriter, r *http.Request, listId string) {
 	}
 
 	// add body=todo to the todo-database
-	newTodo := stores.AddTodo(*todo)
+	newTodo := stores.AddTodo(*todo, listId)
 
 	// send posted todo back
 	json.NewEncoder(w).Encode(newTodo)

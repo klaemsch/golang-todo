@@ -11,21 +11,21 @@ var index int = 0
 // structure of a todo
 // not public, use constructor functions below
 type todo struct {
-	Id       int      `json:"id"`
-	Name     string   `json:"name"`
-	Text     string   `json:"text"`
-	Done     bool     `json:"done"`
-	Category []string `json:"category"`
-	ListId   string   `json:"-"`
-	Rank     int      `json:"rank"`
+	Id       int       `json:"id"`
+	Name     string    `json:"name"`
+	Text     string    `json:"text"`
+	Done     bool      `json:"done"`
+	Category []string  `json:"category"`
+	List     *todoList `json:"-"`
+	Prev     *todo     `json:"-"`
+	Next     *todo     `json:"-"`
 }
 
 /* Create a new Todo
  * r:		request with json body
- * listId:	todo-list-id of the list the todo should be added to
  * returns: pointer to the temporary todo or error
  */
-func NewTodoFromJson(r *http.Request, listId string) (*todo, error) {
+func NewTodoFromJson(r *http.Request) (*todo, error) {
 
 	// create empty todo and fill it with data from request body
 	newTodo := todo{}
@@ -38,12 +38,6 @@ func NewTodoFromJson(r *http.Request, listId string) (*todo, error) {
 	// insert id and update index
 	newTodo.Id = index
 	index++
-
-	// insert id of related todo list
-	newTodo.ListId = listId
-
-	// standard value for rank is 0
-	newTodo.Rank = 0
 
 	return &newTodo, err
 }

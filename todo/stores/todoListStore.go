@@ -6,7 +6,12 @@ import (
 	"log"
 )
 
-var todoListStore []string
+type todoList struct {
+	Id    string
+	Start *todo
+}
+
+var todoListStore []todoList
 
 /* creates a cryptographic safe random string of 16 bytes (32 chars)
  * is used as the identifier for todo lists
@@ -43,8 +48,15 @@ func NewTodoList() (string, error) {
 		return "", err
 	}
 
+	// create new todo list struct with generated id and empty start field
+	// (will be added when the first todo is added to th list)
+	todoList := todoList{
+		Id:    todoListId,
+		Start: nil,
+	}
+
 	// append new todo list to todo list db
-	todoListStore = append(todoListStore, todoListId)
+	todoListStore = append(todoListStore, todoList)
 
 	// return id of new todo list
 	return todoListId, nil
@@ -57,9 +69,24 @@ func NewTodoList() (string, error) {
  */
 func IsValidTodoListId(listId string) bool {
 	for _, todoList := range todoListStore {
-		if listId == todoList {
+		if listId == todoList.Id {
 			return true
 		}
 	}
 	return false
+}
+
+/* searches the todo list store for todo list with the given id
+ * if found -> returns a pointer to the todo list with given id
+ * if not found -> returns nil
+ */
+func GetTodoListById(listId string) *todoList {
+	for index, todoList := range todoListStore {
+		// search for the given id
+		if todoList.Id == listId {
+			return &todoListStore[index]
+		}
+	}
+	// todo list with given id was not found -> return nil
+	return nil
 }
