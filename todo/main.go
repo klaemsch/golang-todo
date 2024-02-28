@@ -24,5 +24,6 @@ func main() {
 	http.HandleFunc("DELETE /api/todo", backend.CORS(backend.AUTH(backend.DeleteTodo)))
 	http.HandleFunc("OPTIONS /api/list", backend.CORS(nil))
 	http.HandleFunc("GET /api/list", backend.CORS(backend.NewTodoList))
+	log.Println("Server started on port 8000")
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }

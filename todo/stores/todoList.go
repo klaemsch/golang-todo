@@ -1,23 +1,14 @@
 package stores
 
-import (
-	"errors"
-	"log"
-)
+import "errors"
 
-/* searches the todo store for todos that are associated with the given todo list id
- * returns a subarray of the todoStore with just those todos
- * if the todo list is not found or the list is empty: an empty array is returned
- */
-func GetTodos(listId string) []todo {
+type TodoList struct {
+	Id    string
+	Start *todo
+}
 
-	// get todo list
-	todoList := GetTodoListById(listId)
-
-	// if not found or todo list is empty -> return empty array
-	if todoList == nil || todoList.Start == nil {
-		return make([]todo, 0)
-	}
+// uses the todo list links to create a slice of all todos
+func (todoList *TodoList) GetTodos() []todo {
 
 	// create todo array that will be returned
 	var todosInTodoList []todo
@@ -25,15 +16,6 @@ func GetTodos(listId string) []todo {
 	// iterate over the links and add every todo
 	currentTodo := todoList.Start
 	for currentTodo != nil {
-
-		// for safety reasons if a falsy listid is found log the error and crash
-		if currentTodo.List.Id != listId {
-			log.Fatalf(
-				"a link in the todo list has a different id (%v) than the list (%v)",
-				currentTodo.List.Id,
-				listId,
-			)
-		}
 		// add the todo and go to the next link
 		todosInTodoList = append(todosInTodoList, *currentTodo)
 		currentTodo = currentTodo.Next
@@ -41,32 +23,15 @@ func GetTodos(listId string) []todo {
 	return todosInTodoList
 }
 
-/* searches the todo store for todo with the given id and given todo list id
+/* searches the todo list for todo with the given id
  * if found -> returns a pointer to the todo with given id
  * if not found -> returns nil
  */
-func GetTodoById(todoId int, listId string) *todo {
-
-	// get todo list
-	todoList := GetTodoListById(listId)
-
-	// if not found or todo list is empty -> return nil
-	if todoList == nil || todoList.Start == nil {
-		return nil
-	}
+func (todoList *TodoList) GetTodoById(todoId int) *todo {
 
 	// iterate over the links and search for the id
 	currentTodo := todoList.Start
 	for currentTodo != nil {
-
-		// for safety reasons if a falsy listid is found log the error and crash
-		if currentTodo.List.Id != listId {
-			log.Fatalf(
-				"a link in the todo list has a different id (%v) than the list (%v)",
-				currentTodo.List.Id,
-				listId,
-			)
-		}
 
 		// check the id, if found return the todo
 		if currentTodo.Id == todoId {
@@ -83,19 +48,10 @@ func GetTodoById(todoId int, listId string) *todo {
 
 /* appends a todo to a todo list
  * newTodo:	data of todo that will be added
- * listId: 	identifier of todo list the todo will be added to
  * returns: pointer to todo that was added
  * error: 	returns nil
  */
-func AddTodo(newTodo todo, listId string) *todo {
-
-	// search for todo list the todo will be added to
-	todoList := GetTodoListById(listId)
-
-	// if not found -> return nil
-	if todoList == nil {
-		return nil
-	}
+func (todoList *TodoList) AddTodo(newTodo todo) *todo {
 
 	// add todo list reference to the todo
 	newTodo.List = todoList
@@ -124,16 +80,15 @@ func AddTodo(newTodo todo, listId string) *todo {
 	return &newTodo
 }
 
-/* Updates a todo in the todo store, replaces the old todo object
+/* Updates a todo in the todo list, replaces the old todo object
  * updatedTodo:		the new todo struct that should be added
- * listId:			the id of the list the old and updated todo are asociated with
  * if successfully updated the todo -> returns update and nil-error
  * if the updated failed -> returns nil and error
  */
-func UpdateTodo(updatedTodo todo, listId string) (*todo, error) {
+func (todoList *TodoList) UpdateTodo(updatedTodo todo) (*todo, error) {
 
 	// try to find the old todo
-	oldTodo := GetTodoById(updatedTodo.Id, listId)
+	oldTodo := todoList.GetTodoById(updatedTodo.Id)
 
 	if oldTodo == nil {
 		// old todo was not found -> return nil and error
@@ -155,15 +110,14 @@ func UpdateTodo(updatedTodo todo, listId string) (*todo, error) {
 }
 
 /*
- * find a todo by id and remove it from the todo store
+ * find a todo by id and remove it from the todo list
  * todoId:	id of the todo that will be deleted
- * listId:	id of the todo list the todo is ascociated with
  * returns a pointer to the deleted todo
  */
-func RemoveTodo(todoId int, listId string) (*todo, error) {
+func (todoList *TodoList) RemoveTodo(todoId int) (*todo, error) {
 
 	// try to find the todo
-	todoToBeDeleted := GetTodoById(todoId, listId)
+	todoToBeDeleted := todoList.GetTodoById(todoId)
 
 	if todoToBeDeleted == nil {
 		// todo was not found -> return nil and error

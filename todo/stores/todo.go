@@ -16,7 +16,7 @@ type todo struct {
 	Text     string    `json:"text"`
 	Done     bool      `json:"done"`
 	Category []string  `json:"category"`
-	List     *todoList `json:"-"`
+	List     *TodoList `json:"-"`
 	Prev     *todo     `json:"-"`
 	Next     *todo     `json:"-"`
 }

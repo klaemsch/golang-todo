@@ -27,7 +27,7 @@ func CORS(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-type MyHandlerFunc func(w http.ResponseWriter, r *http.Request, listId string)
+type MyHandlerFunc func(w http.ResponseWriter, r *http.Request, todoList *stores.TodoList)
 
 /* http Middleware for extracting and validating the content of the Authorization Header (token)
  * if token / listId is valid -> next function / request handler
@@ -46,19 +46,15 @@ func AUTH(next MyHandlerFunc) http.HandlerFunc {
 		}
 
 		// checks if the token / listId is in the todo list store
-		isValid := stores.IsValidTodoListId(token)
+		todoList := stores.GetTodoListById(token)
 
-		if !isValid {
+		if todoList == nil {
 			// if token / listId is invalid return error
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
 
-		// if token / listId is valid -> save listId in the request context
-		//ctx := context.WithValue(r.Context(), "listId", token)
-
-		// call next function with context
-		//next(w, r.WithContext(ctx))
-		next(w, r, token)
+		// call next function with todoList
+		next(w, r, todoList)
 	}
 }
