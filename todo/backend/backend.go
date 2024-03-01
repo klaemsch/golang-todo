@@ -129,7 +129,7 @@ func PutTodo(w http.ResponseWriter, r *http.Request, todoList *stores.TodoList) 
 	}
 
 	// decode json from request body
-	updatedTodo, err := stores.JsonToTodo(r)
+	updatedTodo, changeOrder, err := stores.UpdateTodoFromJson(r)
 
 	if err != nil {
 		log.Printf("Error while decoding body: %v", err)
@@ -137,18 +137,29 @@ func PutTodo(w http.ResponseWriter, r *http.Request, todoList *stores.TodoList) 
 		return
 	}
 
+	fmt.Print(updatedTodo)
+
 	// update todo in the database
 	updatedTodo, err = todoList.UpdateTodo(*updatedTodo)
 
 	if err != nil {
 		log.Printf("Todo with id %v not found, could not be updated", (*updatedTodo).Id)
 		http.Error(w, "Todo with given id not found", http.StatusBadRequest)
-	} else {
-		// send updated todo back
-		json.NewEncoder(w).Encode(*updatedTodo)
-		log.Printf("PUT /todo?id=%v (200 OK)", (*updatedTodo).Id)
 	}
 
+	if changeOrder != nil {
+		updatedTodo, err = todoList.MoveTodo(updatedTodo.Id, changeOrder.MoveUp)
+	}
+
+	if err != nil {
+		log.Printf("Error while moving todo: %v", err)
+		http.Error(w, "Error while moving todo", http.StatusInternalServerError)
+		return
+	}
+
+	// send updated todo back
+	json.NewEncoder(w).Encode(*updatedTodo)
+	log.Printf("PUT /todo?id=%v (200 OK)", (*updatedTodo).Id)
 }
 
 /*
