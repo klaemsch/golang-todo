@@ -14,16 +14,7 @@ import "../../node_modules/@creativebulma/bulma-tooltip/dist/bulma-tooltip.css"
 const TodoOverview = () => {
 
   // state where todos will be saved
-  const [todos, setTodosWrapped] = useState([]);
-
-  // wraps the setter of the todos state to sort them every time the todos are updated
-  // maybe better to sort them backend-side
-  const setTodos = (todos) => {
-    const newTodos = todos.sort((a, b) => {
-      return a.rank > b.rank ? -1 : 1
-    })
-    setTodosWrapped(newTodos)
-  }
+  const [todos, setTodos] = useState([]);
 
   // on component load: fetch all todos from backend and save the response in the todo state
   useEffect(() => {
@@ -37,7 +28,7 @@ const TodoOverview = () => {
   // uses given data to call the backend to create a new todo, adds the response to the todo state
   const addTodo = async (done, name, text, category) => {
     let response = await reqClient.post('/todo', { done: done, name: name, text: text, category: category })
-    if (response.status == 200 && response.data !== null) setTodos([...todos, response.data]);
+    if (response.status == 200 && response.data !== null) setTodos([response.data, ...todos]);
   }
 
   // uses given id to call the backend to remove the todo, removesit from the todo state
@@ -54,7 +45,7 @@ const TodoOverview = () => {
 
   // uses given data to call the backend to edit a todo, updates the todo state
   const editTodo = async (id, done, name, text, category) => {
-    
+
     // find todo with id locally
     let todoToEdit = todos.find((todo) => {
       return todo.id === id
@@ -90,7 +81,7 @@ const TodoOverview = () => {
     let markedTodo = todos.find((todo) => {
       return todo.id === id
     })
-    if (markedTodo === null) return
+    if (markedTodo === undefined) return
 
     // update done state of todo locally
     markedTodo.done = !markedTodo.done
@@ -112,31 +103,77 @@ const TodoOverview = () => {
   };
 
   // uses given data to call the backend to move a todo, updates the todo state
-  const moveTodo = async (id, rankDif) => {
+  const moveTodo = async (id, upOrDown) => {
 
     // find todo locally
-    let markedTodo = todos.find((todo) => {
+    let todoToBeMovedIndex = todos.findIndex((todo) => {
       return todo.id === id
     })
-    if (markedTodo === null) return
+    if (todoToBeMovedIndex === -1) return
+
+    let todoToBeMoved = todos[todoToBeMovedIndex]
+
+    console.log(todoToBeMoved)
 
     // edit todo
-    markedTodo.rank += rankDif
+    todoToBeMoved.upOrDown = upOrDown
 
     // send todo data to backend
-    let response = await reqClient.put('/todo', markedTodo)
+    let response = await reqClient.put('/todo', todoToBeMoved)
+    console.log(response.request)
     if (response.status !== 200 && response.data !== null) return
 
-    // replace todo with updated response
-    setTodos(
-      todos.map((todo) => {
-        if (markedTodo.id === todo.id) {
-          return response.data
-        } else {
-          return todo
-        }
-      })
-    );
+    if (upOrDown == -1) {
+      // move down, swap with next element
+      const nextTodo = todos[todoToBeMovedIndex + 1]
+      console.log(nextTodo)
+      if (nextTodo === undefined) {
+        // replace todo with updated response
+        setTodos(
+          todos.map((todo) => {
+            if (todoToBeMoved.id === todo.id) {
+              return response.data
+            } else {
+              return todo
+            }
+          })
+        );
+        return
+      }
+      setTodos(
+        [
+          ...todos.slice(0, todoToBeMovedIndex),
+          nextTodo,
+          response.data,
+          ...todos.slice(todoToBeMovedIndex + 2)
+        ]
+      )
+    } else {
+      // move up, swap with next element
+      const prevTodo = todos[todoToBeMovedIndex - 1]
+      if (prevTodo === undefined) {
+        // replace todo with updated response
+        setTodos(
+          todos.map((todo) => {
+            if (todoToBeMoved.id === todo.id) {
+              return response.data
+            } else {
+              return todo
+            }
+          })
+        );
+        return
+      }
+      setTodos(
+        [
+          ...todos.slice(0, todoToBeMovedIndex - 1),
+          response.data,
+          prevTodo,
+          ...todos.slice(todoToBeMovedIndex + 1)
+        ]
+      )
+    }
+
   };
 
   // writes share url to clipboard

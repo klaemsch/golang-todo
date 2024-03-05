@@ -11,21 +11,31 @@ var index int = 0
 // structure of a todo
 // not public, use constructor functions below
 type todo struct {
-	Id       int      `json:"id"`
-	Name     string   `json:"name"`
-	Text     string   `json:"text"`
-	Done     bool     `json:"done"`
-	Category []string `json:"category"`
-	ListId   string   `json:"-"`
-	Rank     int      `json:"rank"`
+	Id       int       `json:"id"`
+	Name     string    `json:"name"`
+	Text     string    `json:"text"`
+	Done     bool      `json:"done"`
+	Category []string  `json:"category"`
+	List     *TodoList `json:"-"`
+	Prev     *todo     `json:"-"`
+	Next     *todo     `json:"-"`
+}
+
+type todoUpdate struct {
+	todo
+	UpOrDown int `json:"upOrDown"`
+}
+
+type changeOrder struct {
+	Todo   *todo
+	MoveUp bool
 }
 
 /* Create a new Todo
  * r:		request with json body
- * listId:	todo-list-id of the list the todo should be added to
  * returns: pointer to the temporary todo or error
  */
-func NewTodoFromJson(r *http.Request, listId string) (*todo, error) {
+func NewTodoFromJson(r *http.Request) (*todo, error) {
 
 	// create empty todo and fill it with data from request body
 	newTodo := todo{}
@@ -39,12 +49,6 @@ func NewTodoFromJson(r *http.Request, listId string) (*todo, error) {
 	newTodo.Id = index
 	index++
 
-	// insert id of related todo list
-	newTodo.ListId = listId
-
-	// standard value for rank is 0
-	newTodo.Rank = 0
-
 	return &newTodo, err
 }
 
@@ -52,15 +56,37 @@ func NewTodoFromJson(r *http.Request, listId string) (*todo, error) {
  * r:		request with json body
  * returns: pointer to the temporary todo or error
  */
-func JsonToTodo(r *http.Request) (*todo, error) {
+func UpdateTodoFromJson(r *http.Request) (*todo, *changeOrder, error) {
 
-	// create empty todo and fill it with data from body
-	todo := todo{}
-	err := json.NewDecoder(r.Body).Decode(&todo)
+	// create empty todoUpdate and fill it with data from body
+	todoUpdate := todoUpdate{}
+	err := json.NewDecoder(r.Body).Decode(&todoUpdate)
 
-	if err != nil {
-		return nil, err
+	// create todo and fill it with data from todoUpdate
+	todo := todo{
+		todoUpdate.Id,
+		todoUpdate.Name,
+		todoUpdate.Text,
+		todoUpdate.Done,
+		todoUpdate.Category,
+		nil,
+		nil,
+		nil,
 	}
 
-	return &todo, err
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// check if the update includes a moving order
+	if todoUpdate.UpOrDown == 0 {
+		// return the update, no moving order
+		return &todo, nil, nil
+	}
+
+	// the update includes a moving order
+
+	moveUp := todoUpdate.UpOrDown == 1
+	changeOrder := changeOrder{&todo, moveUp}
+	return &todo, &changeOrder, nil
 }

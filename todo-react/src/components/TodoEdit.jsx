@@ -34,7 +34,6 @@ const TodoEdit = (props) => {
     event.preventDefault();
     if (props.edit) {
       // if edit mode -> call edit todo with updated data and close the edit mode
-      console.log(categoryState)
       props.editTodo(props.id, doneState, nameState, textState, categoryState)
       props.setEditMode(false)
     } else {
